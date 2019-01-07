@@ -48,7 +48,7 @@ class NeuralNetwork(object):
         for X, y in zip(features, targets):
 
             final_outputs, hidden_outputs = self.forward_pass_train(X)  # Implement the forward pass function below
-            print(X, y)
+
             # Implement the backproagation function below
             delta_weights_i_h, delta_weights_h_o = self.backpropagation(final_outputs, hidden_outputs, X, y,
                                                                         delta_weights_i_h, delta_weights_h_o)
@@ -103,11 +103,15 @@ class NeuralNetwork(object):
         # TODO: Backpropagated error terms - Replace these values with your calculations.
 
         hidden_error_term = hidden_error * hidden_outputs * (1 - hidden_outputs)
+        print(hidden_error_term.shape,  X[:, None].shape)
 
         # Weight step (input to hidden)
         delta_weights_i_h += hidden_error_term * X[:, None]
         # Weight step (hidden to output)
         delta_weights_h_o += output_error_term * hidden_outputs[:, None]
+
+        #print(delta_weights_i_h.shape, delta_weights_h_o.shape)
+        #print(X.shape)
 
         return delta_weights_i_h, delta_weights_h_o
 

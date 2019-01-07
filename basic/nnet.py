@@ -3,7 +3,11 @@ import numpy as np
 
 
 
-def linear(weights, X_input):
+def linear(X_input, weights):
+    """
+    out = Xw
+    X should be (rows, columns) and w should match (columns, hidden units)
+    """
     #print(f"X_{X_input.shape} \\times weights_{weights.shape}")
     a = np.dot(X_input, weights)
     #print(f"X_{X_input.shape} \\times weights_{weights.shape} = a_{a.shape}")
@@ -12,14 +16,6 @@ def linear(weights, X_input):
 def sigmoid(hidden_input):
     a = 1 / (1 + np.exp(hidden_input))
     return a
-
-def _relu(u):
-    if u <= 0:
-        return 0
-    else:
-        return u
-
-ReLu = np.vectorize(_relu, otypes=[float]) # need to vectorize to apply to numpy arrays
 
 def MSE(y, yhat):
     return np.mean((y - yhat)**2)
@@ -35,27 +31,28 @@ class NeuralNetwork:
         self.y = y
         self.learning_rate = learning_rate
         self.hidden_units = hidden_units
-        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units))
+        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units)) # (input units, hidden units)
         self.weights2 = np.random.normal(loc=0, scale=1, size=(hidden_units, 1)) # for now there will only be one output unit
 
 
     def forward(self, X = None):
-        if not isinstance(X, np.ndarray):
-            X = self.X
-        hidden_output1 = linear(self.weights1, X)
-        hidden_output1 = sigmoid(hidden_output1) # apply the nonlinear transformation
+        if isinstance(X, np.ndarray):
+            hidden_output1 = linear(X, self.weights1)
+            hidden_output1 = sigmoid(hidden_output1) # apply the nonlinear transformation
 
-        hidden_output2 = linear(self.weights2, hidden_output1)
+            hidden_output2 = linear(hidden_output1, self.weights2)
 
-        return hidden_output2, hidden_output1
+            return hidden_output2, hidden_output1
+        else:
+            raise ValueError("need a vector in the forward function")
 
 
-    def backpropogation(self, hidden_output1, hidden_output2):
+    def backpropogation(self, hidden_output1, hidden_output2, target):
         #print("Hidden Output Shapes", hidden_output1.shape, hidden_output2.shape)
-        output_error = (self.y - hidden_output2) #  -(target - y); 20 x 1
+        output_error = (target - hidden_output2) #  -(target - y); 20 x 1
 
         # update hidden layer weights
-        hidden_error = linear(self.weights2.T, output_error) # neccessary for hidden layer updates; 20 x 9
+        hidden_error = output_error * self.weights2 # neccessary for hidden layer updates; 9 x 1
         update1 = hidden_error * hidden_output2 * (1 - hidden_output2) # logistic
         update1 = np.dot(update1.T, self.X)
         #print("update1: ", update1.shape)
@@ -76,11 +73,8 @@ class NeuralNetwork:
 
 
     def train(self, n_epochs = 15):
-        for _ in range(n_epochs):
-            hidden_output2, hidden_output1 = self.forward()
-            mse = MSE(self.y, hidden_output2)
-            print("MSE: ", round(mse, 4), flush=True)
-            sys.stdout.flush()
+        for x, y in zip(self.X, self.y):
+            hidden_output2, hidden_output1 = self.forward(X=x)
             update2, update1 = self.backpropogation(hidden_output1, hidden_output2)
             self.gradient_descent(update1, update2)
 
@@ -99,10 +93,12 @@ def forward_run_example():
     X, y = example_data()
     model = NeuralNetwork(X, y)
     print("Forward Run")
-    hidden_output2, hidden_output1 = model.forward() # returns (final_output, hidden_output1)
+    for x,target in zip(X,y): 
+        hidden_output2, hidden_output1 = model.forward(X=x) # returns (final_output, hidden_output1)
+        print(x,target)
     return model, hidden_output2, hidden_output1
 
-
+#forward_run_example()
 
 
 
@@ -131,4 +127,4 @@ def run_example():
     model.train(n_epochs=50)
     return model
 
-run_example()
+#run_example()
