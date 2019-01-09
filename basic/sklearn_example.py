@@ -8,14 +8,14 @@ def MSE(y, yhat):
 def example_data(rows = 20, columns = 3):
     #np.random.seed(123)
     X = np.random.normal(size=(rows, columns))
-    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**3
+    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
-    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**2
+    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
     X = X / 10
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
-    y = y.reshape((rows, 1))
+    y = y[:, None]
     ## scale the values ##
-    X = X / 10
+    X = X / 100
     y = (y - 68) / 500
     return (X, y)
 

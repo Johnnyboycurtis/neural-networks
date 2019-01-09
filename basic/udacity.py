@@ -11,10 +11,10 @@ class NeuralNetwork(object):
         self.output_nodes = output_nodes
 
         # Initialize weights
-        self.weights_input_to_hidden = np.random.normal(0.0, self.input_nodes**-0.5,
+        self.weights_input_to_hidden = np.random.normal(0.0, 1.0,
                                        (self.input_nodes, self.hidden_nodes))
 
-        self.weights_hidden_to_output = np.random.normal(0.0, self.hidden_nodes**-0.5,
+        self.weights_hidden_to_output = np.random.normal(0.0, 1.0,
                                        (self.hidden_nodes, self.output_nodes))
         self.lr = learning_rate
 
@@ -101,11 +101,12 @@ class NeuralNetwork(object):
         # TODO: Calculate the hidden layer's contribution to the error
         hidden_error = np.dot(self.weights_hidden_to_output,
                               output_error_term)
-
+        #print(self.weights_hidden_to_output.shape, hidden_error.shape,  X[:, None].shape)
         # TODO: Backpropagated error terms - Replace these values with your calculations.
 
+        #print(hidden_outputs.shape)
         hidden_error_term = hidden_error * hidden_outputs * (1 - hidden_outputs)
-        #print(hidden_error_term.shape,  X[:, None].shape)
+        print(hidden_error_term.shape,  X[:, None].shape)
 
         # Weight step (input to hidden)
         delta_weights_i_h += hidden_error_term * X[:, None]
@@ -165,21 +166,21 @@ def MSE(y, yhat):
 def example_data(rows = 20, columns = 3):
     #np.random.seed(123)
     X = np.random.normal(size=(rows, columns))
-    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**3
+    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
-    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**2
+    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
     X = X / 10
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
-    y = y.reshape((rows, 1))
+    y = y[:, None]
     ## scale the values ##
-    X = X / 10
+    X = X / 100
     y = (y - 68) / 500
     return (X, y)
 
 def run_example():
-    iterations = 100
+    iterations = 1
     learning_rate = 0.09
-    hidden_nodes = 50
+    hidden_nodes = 9
     output_nodes = 1
     X, y = example_data()
     model = NeuralNetwork(input_nodes=3, hidden_nodes=hidden_nodes, output_nodes=1, learning_rate=learning_rate)
@@ -194,7 +195,7 @@ def run_example():
         plt.scatter(X[:, i], y=y, marker='o')
         plt.scatter(X[:, i], y=yhat, marker='x')
         plt.show()
-    
+
 
 
 run_example()

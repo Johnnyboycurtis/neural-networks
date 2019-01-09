@@ -31,8 +31,8 @@ class NeuralNetwork:
         self.y = y
         self.learning_rate = learning_rate
         self.hidden_units = hidden_units
-        self.weights1 = np.random.normal(loc=0, scale=0.5, size=(X.shape[1], hidden_units)) # (input units, hidden units)
-        self.weights2 = np.random.normal(loc=0, scale=0.5, size=(hidden_units, 1)) # for now there will only be one output unit
+        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units)) # (input units, hidden units)
+        self.weights2 = np.random.normal(loc=0, scale=1, size=(hidden_units, 1)) # for now there will only be one output unit
 
 
     def forward(self, X = None):
@@ -52,34 +52,32 @@ class NeuralNetwork:
 
         # update hidden layer weights
         hidden_error = output_error * self.weights2 # neccessary for hidden layer updates; 9 x 1
-        update1 = hidden_error * hidden_output2 * (1 - hidden_output2) # logistic
-        update1 = update1 * x
-        #print("update1: ", update1.shape)
+        update1 = hidden_error * x * hidden_output2 * (1 - hidden_output2) # logistic
 
         # update output layer weights; linear not logistic
         update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
-        #print("update2: ", update2.shape)
-        return update2, update1
+        return update2[:, None], update1.T
 
-    def gradient_descent(self, update1, update2):
-        #print(self.weights1.shape, update1.T.shape)
-        #print(self.weights2.shape, update2.shape)
-        #print(self.weights2 + update2[:, None])
-        self.weights1 += self.learning_rate * update1.T # hidden layer weights
-        self.weights2 += self.learning_rate * update2[:, None] # output layer weights
+    def gradient_descent(self, delta_weights1, delta_weights2):
+        self.weights1 += self.learning_rate * delta_weights1 # hidden layer weights
+        self.weights2 += self.learning_rate * delta_weights2 # output layer weights
         return None
 
 
     def train(self, n_epochs = 15):
+        n_records = self.X.shape[0]
         for _ in tqdm(range(n_epochs)):
+            delta_weights1 = np.zeros_like(self.weights1)
+            delta_weights2 = np.zeros_like(self.weights2)
             for x, y in zip(self.X, self.y):
                 hidden_output2, hidden_output1 = self.forward(X=x)
                 update2, update1 = self.backpropogation(hidden_output1, hidden_output2, x=x, target=y)
-                self.gradient_descent(update1, update2)
+                delta_weights1 += update1 / n_records
+                delta_weights2 += update2 / n_records
+            self.gradient_descent(delta_weights1, delta_weights2)
             yhat, _ = self.forward(X=self.X)
             mse_stat = MSE(y = self.y, yhat = yhat)
             #print("MSE: ", mse_stat)
-
         return yhat
 
 
@@ -88,14 +86,14 @@ class NeuralNetwork:
 def example_data(rows = 20, columns = 3):
     #np.random.seed(123)
     X = np.random.normal(size=(rows, columns))
-    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**3
+    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
-    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**2
+    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
     X = X / 10
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
     y = y[:, None]
     ## scale the values ##
-    X = X / 10
+    X = X / 100
     y = (y - 68) / 500
     return (X, y)
 
@@ -133,7 +131,7 @@ def gradient_descent_example():
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(X, y, hidden_units=50, learning_rate=0.05)
+    model = NeuralNetwork(X, y, hidden_units=50, learning_rate=0.09)
     yhat = model.train(n_epochs=100)
     yhat = yhat*500 + 68
     y = y*500 + 68
