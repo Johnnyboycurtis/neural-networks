@@ -14,7 +14,7 @@ def linear(X_input, weights):
     return a
 
 def sigmoid(hidden_input):
-    a = 1 / (1 + np.exp(hidden_input))
+    a = 1 / (1 + np.exp(-hidden_input))
     return a
 
 def MSE(y, yhat):
@@ -31,16 +31,27 @@ class NeuralNetwork:
         self.y = y
         self.learning_rate = learning_rate
         self.hidden_units = hidden_units
-        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units)) # (input units, hidden units)
-        self.weights2 = np.random.normal(loc=0, scale=1, size=(hidden_units, 1)) # for now there will only be one output unit
+        np.random.seed(123)
+        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units)).round(3) # (input units, hidden units)
+        self.weights2 = np.random.normal(loc=0, scale=1, size=(hidden_units, 1)).round(3) # for now there will only be one output unit
+
+        print("Weights 1")
+        print(self.weights1)
+        
+        print("Weights 2")
+        print(self.weights2)
 
 
-    def forward(self, X = None):
+    def forward(self, X = None, verbose=False):
         if isinstance(X, np.ndarray):
             hidden_output1 = linear(X, self.weights1)
             hidden_output1 = sigmoid(hidden_output1) # apply the nonlinear transformation
 
             hidden_output2 = linear(hidden_output1, self.weights2)
+
+            if verbose:
+                print("hidden output: ", hidden_output1.round(3))
+                print("output: ", hidden_output2.round(3))
 
             return hidden_output2, hidden_output1
         else:
@@ -66,11 +77,11 @@ class NeuralNetwork:
 
     def train(self, n_epochs = 15):
         n_records = self.X.shape[0]
-        for _ in tqdm(range(n_epochs)):
+        for _ in range(n_epochs):
             delta_weights1 = np.zeros_like(self.weights1)
             delta_weights2 = np.zeros_like(self.weights2)
             for x, y in zip(self.X, self.y):
-                hidden_output2, hidden_output1 = self.forward(X=x)
+                hidden_output2, hidden_output1 = self.forward(X=x, verbose=True)
                 update2, update1 = self.backpropogation(hidden_output1, hidden_output2, x=x, target=y)
                 delta_weights1 += update1 / n_records
                 delta_weights2 += update2 / n_records
@@ -89,13 +100,12 @@ def example_data(rows = 20, columns = 3):
     X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
     X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
-    X = X / 10
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
     y = y[:, None]
     ## scale the values ##
     X = X / 100
     y = (y - 68) / 500
-    return (X, y)
+    return (X, y.round(3))
 
 
 def forward_run_example():
@@ -131,17 +141,23 @@ def gradient_descent_example():
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(X, y, hidden_units=50, learning_rate=0.09)
-    yhat = model.train(n_epochs=100)
+    model = NeuralNetwork(X, y, hidden_units=9, learning_rate=0.09)
+    yhat = model.train(n_epochs=1)
     yhat = yhat*500 + 68
     y = y*500 + 68
     mse_stat = MSE(y = y, yhat = yhat)
-    print("Final MSE (not scaled): ", mse_stat)
+    #print("Final MSE (not scaled): ", mse_stat)
     for i in range(3):
         plt.title("X[:, {}] and y".format(i))
         plt.scatter(X[:, i], y=y, marker='o')
         plt.scatter(X[:, i], y=yhat, marker='x')
         plt.show()
+
+    print("Weights 1")
+    print(model.weights1.round(3))
+    print("Weights 2")
+    print(model.weights2.round(3))
+
     return model
 
 run_example()
