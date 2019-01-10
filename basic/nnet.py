@@ -8,9 +8,7 @@ def linear(X_input, weights):
     out = Xw
     X should be (rows, columns) and w should match (columns, hidden units)
     """
-    #print(f"X_{X_input.shape} \\times weights_{weights.shape}")
     a = np.dot(X_input, weights)
-    #print(f"X_{X_input.shape} \\times weights_{weights.shape} = a_{a.shape}")
     return a
 
 def sigmoid(hidden_input):
@@ -26,6 +24,8 @@ class NeuralNetwork:
     def __init__(self, X, y, hidden_units = 9, learning_rate = 0.1):
         """
         Two hidden layer neural network for regression
+            Hidden Layer 1: Logistic Activation
+            Hidden Layer 2: Linear Activation (for regression)
         """
         self.X = X
         self.y = y
@@ -104,7 +104,7 @@ def example_data(rows = 20, columns = 3):
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
     y = y[:, None]
     ## scale the values ##
-    X = X / 100
+    X = X / 1000
     y = (y - 68) / 500
     return (X, y.round(3))
 
@@ -142,7 +142,7 @@ def gradient_descent_example():
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(X, y, hidden_units=20, learning_rate=0.09)
+    model = NeuralNetwork(X, y, hidden_units=100, learning_rate=0.004)
     yhat = model.train(n_epochs=1000)
     yhat = yhat*500 + 68
     y = y*500 + 68
@@ -154,10 +154,10 @@ def run_example():
         plt.scatter(X[:, i], y=yhat, marker='x')
         plt.show()
 
-    print("Weights 1")
-    print(model.weights1.round(3))
-    print("Weights 2")
-    print(model.weights2.round(3))
+    #print("Weights 1")
+    #print(model.weights1.round(3))
+    #print("Weights 2")
+    #print(model.weights2.round(3))
 
     return model
 
