@@ -84,8 +84,9 @@ class NeuralNetwork(object):
         final_outputs = final_inputs # signals from final output layer
 
         if verbose:
-            print("hidden output: ", hidden_outputs.round(3))
-            print("output: ", final_outputs.round(3))
+            pass
+            #print("hidden output: ", hidden_outputs.round(3))
+            #print("output: ", final_outputs.round(3))
 
         return final_outputs, hidden_outputs
 
@@ -112,20 +113,15 @@ class NeuralNetwork(object):
         # TODO: Calculate the hidden layer's contribution to the error
         hidden_error = np.dot(self.weights_hidden_to_output,
                               output_error_term)
-        #print(self.weights_hidden_to_output.shape, hidden_error.shape,  X[:, None].shape)
         # TODO: Backpropagated error terms - Replace these values with your calculations.
 
-        #print(hidden_outputs.shape)
         hidden_error_term = hidden_error * hidden_outputs * (1 - hidden_outputs)
-        #print(hidden_error_term.shape,  X[:, None].shape)
 
         # Weight step (input to hidden)
-        delta_weights_i_h += hidden_error_term * X[:, None]
+        update1 = hidden_error_term * X[:, None]
+        delta_weights_i_h += update1
         # Weight step (hidden to output)
         delta_weights_h_o += output_error_term * hidden_outputs[:, None]
-
-        #print(delta_weights_i_h.shape, delta_weights_h_o.shape)
-        #print(X.shape)
 
         return delta_weights_i_h, delta_weights_h_o
 
@@ -188,9 +184,9 @@ def example_data(rows = 20, columns = 3):
     return (X, y.round(3))
 
 def run_example():
-    iterations = 1
+    iterations = 1000
     learning_rate = 0.09
-    hidden_nodes = 9
+    hidden_nodes = 20
     output_nodes = 1
     X, y = example_data()
     model = NeuralNetwork(input_nodes=3, hidden_nodes=hidden_nodes, output_nodes=1, learning_rate=learning_rate)
@@ -204,7 +200,7 @@ def run_example():
         plt.title("X[:, {}] and y".format(i))
         plt.scatter(X[:, i], y=y, marker='o')
         plt.scatter(X[:, i], y=yhat, marker='x')
-        #plt.show()
+        plt.show()
 
     print("Weights 1")
     print(model.weights_input_to_hidden.round(3))
