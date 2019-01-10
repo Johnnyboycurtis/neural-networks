@@ -62,12 +62,13 @@ class NeuralNetwork:
         output_error = (target - hidden_output2) #  -(target - y); 20 x 1
 
         # update hidden layer weights
-        hidden_error = output_error * self.weights2 # neccessary for hidden layer updates; 9 x 1
-        update1 = hidden_error * x * hidden_output2 * (1 - hidden_output2) # logistic
-
+        hidden_error = np.dot(self.weights2, output_error) # neccessary for hidden layer updates; 9 x 1
+        update1 = hidden_error * hidden_output1 * (1 - hidden_output1) # logistic output from first hidden layer
+        update1 = update1*x[:, None] # multiply the input units as is part of the logistic derivative
+        
         # update output layer weights; linear not logistic
         update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
-        return update2[:, None], update1.T
+        return update2[:, None], update1
 
     def gradient_descent(self, delta_weights1, delta_weights2):
         self.weights1 += self.learning_rate * delta_weights1 # hidden layer weights
@@ -81,7 +82,7 @@ class NeuralNetwork:
             delta_weights1 = np.zeros_like(self.weights1)
             delta_weights2 = np.zeros_like(self.weights2)
             for x, y in zip(self.X, self.y):
-                hidden_output2, hidden_output1 = self.forward(X=x, verbose=True)
+                hidden_output2, hidden_output1 = self.forward(X=x, verbose=False)
                 update2, update1 = self.backpropogation(hidden_output1, hidden_output2, x=x, target=y)
                 delta_weights1 += update1 / n_records
                 delta_weights2 += update2 / n_records
@@ -141,8 +142,8 @@ def gradient_descent_example():
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(X, y, hidden_units=9, learning_rate=0.09)
-    yhat = model.train(n_epochs=1)
+    model = NeuralNetwork(X, y, hidden_units=20, learning_rate=0.09)
+    yhat = model.train(n_epochs=1000)
     yhat = yhat*500 + 68
     y = y*500 + 68
     mse_stat = MSE(y = y, yhat = yhat)
