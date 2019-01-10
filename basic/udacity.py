@@ -173,9 +173,9 @@ def MSE(y, yhat):
 def example_data(rows = 20, columns = 3):
     #np.random.seed(123)
     X = np.random.normal(size=(rows, columns))
-    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
+    X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**3
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
-    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
+    X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**2
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
     y = y[:, None]
     ## scale the values ##
@@ -185,7 +185,7 @@ def example_data(rows = 20, columns = 3):
 
 def run_example():
     iterations = 1000
-    learning_rate = 0.09
+    learning_rate = 0.005
     hidden_nodes = 20
     output_nodes = 1
     X, y = example_data()
