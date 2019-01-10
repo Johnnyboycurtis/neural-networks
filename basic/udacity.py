@@ -11,11 +11,18 @@ class NeuralNetwork(object):
         self.output_nodes = output_nodes
 
         # Initialize weights
+        np.random.seed(123)
         self.weights_input_to_hidden = np.random.normal(0.0, 1.0,
-                                       (self.input_nodes, self.hidden_nodes))
+                                       (self.input_nodes, self.hidden_nodes)).round(3)
 
         self.weights_hidden_to_output = np.random.normal(0.0, 1.0,
-                                       (self.hidden_nodes, self.output_nodes))
+                                       (self.hidden_nodes, self.output_nodes)).round(3)
+
+        print("Weights 1")
+        print(self.weights_input_to_hidden.round(3))
+        print("Weights 2")
+        print(self.weights_hidden_to_output.round(3))
+
         self.lr = learning_rate
 
         #### TODO: Set self.activation_function to your implemented sigmoid function ####
@@ -49,7 +56,7 @@ class NeuralNetwork(object):
         delta_weights_h_o = np.zeros(self.weights_hidden_to_output.shape)
         for X, y in zip(features, targets):
 
-            final_outputs, hidden_outputs = self.forward_pass_train(X)  # Implement the forward pass function below
+            final_outputs, hidden_outputs = self.forward_pass_train(X, verbose=True)  # Implement the forward pass function below
 
             # Implement the backproagation function below
             delta_weights_i_h, delta_weights_h_o = self.backpropagation(final_outputs, hidden_outputs, X, y,
@@ -57,7 +64,7 @@ class NeuralNetwork(object):
         self.update_weights(delta_weights_i_h, delta_weights_h_o, n_records)
 
 
-    def forward_pass_train(self, X):
+    def forward_pass_train(self, X, verbose=False):
         ''' Implement forward pass here
 
             Arguments
@@ -75,6 +82,10 @@ class NeuralNetwork(object):
         final_inputs = np.dot(hidden_outputs,
                       self.weights_hidden_to_output) # signals into final output layer
         final_outputs = final_inputs # signals from final output layer
+
+        if verbose:
+            print("hidden output: ", hidden_outputs.round(3))
+            print("output: ", final_outputs.round(3))
 
         return final_outputs, hidden_outputs
 
@@ -106,7 +117,7 @@ class NeuralNetwork(object):
 
         #print(hidden_outputs.shape)
         hidden_error_term = hidden_error * hidden_outputs * (1 - hidden_outputs)
-        print(hidden_error_term.shape,  X[:, None].shape)
+        #print(hidden_error_term.shape,  X[:, None].shape)
 
         # Weight step (input to hidden)
         delta_weights_i_h += hidden_error_term * X[:, None]
@@ -169,13 +180,12 @@ def example_data(rows = 20, columns = 3):
     X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
     X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
     X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
-    X = X / 10
     y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
     y = y[:, None]
     ## scale the values ##
     X = X / 100
     y = (y - 68) / 500
-    return (X, y)
+    return (X, y.round(3))
 
 def run_example():
     iterations = 1
@@ -184,7 +194,7 @@ def run_example():
     output_nodes = 1
     X, y = example_data()
     model = NeuralNetwork(input_nodes=3, hidden_nodes=hidden_nodes, output_nodes=1, learning_rate=learning_rate)
-    for _ in tqdm(range(iterations)):
+    for _ in range(iterations):
         model.train(features=X, targets=y)
         yhat, _ = model.forward_pass_train(X = X)
 
@@ -194,8 +204,11 @@ def run_example():
         plt.title("X[:, {}] and y".format(i))
         plt.scatter(X[:, i], y=y, marker='o')
         plt.scatter(X[:, i], y=yhat, marker='x')
-        plt.show()
+        #plt.show()
 
-
+    print("Weights 1")
+    print(model.weights_input_to_hidden.round(3))
+    print("Weights 2")
+    print(model.weights_hidden_to_output.round(3))
 
 run_example()
