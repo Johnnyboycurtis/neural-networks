@@ -221,15 +221,102 @@ where
 \subsection{Gradient for Hidden Layer}
 
 
+	Just as was done for the second hidden layer, the output layer, we have to take the derivative wrt the first hidden layer's weights $w^{(1)}$.
+	
+	$$
+	\frac{dE}{dw^{(1)}_k} = \frac{dE}{do_i} \frac{do_i}{dh^{(1)}_k} \frac{dh_k}{dw^{(1)}_j}
+	$$
 
 
+	Taking the derivative of $E$ wrt $o_i$ remains the same. However, the second partial derivative is a bit different
+
+	$$
+	\frac{do_i}{dh^{(1)}_k} = \frac{d}{dh^{(1)}_k}  (dw^{(2)}_1 h^{(1)}_1+ \cdots + w^{(2)}_k h^{(1)}_k + \cdots + + w^{(2)}_9 h^{(1)}_9)
+	= w^{(2)}_k
+	$$
+
+	Repeating this process of taking partial derivatives wrt each hidden layer input we obtain the gradient
+	
+	$$
+	\nabla o_i = \begin{bmatrix}
+	\frac{do_i}{dh^{(1)}_1} \\ 
+	\cdots \\ 
+	\frac{do_i}{dh^{(1)}_9} \\ 
+	\end{bmatrix}
+	= \begin{bmatrix}
+	w^{(2)}_1 \\
+	\cdots \\
+	w^{(2)}_9
+	\end{bmatrix}
+	$$
 
 
+	The last remaining step is to calculate the derivative of $h_k$ wrt $w^{(1)}_j$
+	
+	$$
+	\frac{dh_k}{dw^{(1)}_j} = \frac{dh_k}{dz_k} \times \frac{dz_k}{dw^{(1)}_j}
+	$$
+	
+	Since $h_k = f(z_k) = \textbf{logistic}(z_k)$, uses the logistic activation function, we'll need to take the derivative of the logistic function. 
+	
+	$$
+	f'(z_k) = f(z_k) \times (1 - f(z_k))
+	$$
+	
+with the gradient being
+
+	$$
+	\nabla \mathbf{h} = f(\mathbf{z}) (1 - f(\mathbf{z}))
+	$$
+
+and 
+
+	$$
+	\frac{dz_k}{dw^{(1)}_j} = \frac{d}{dw^{(1)}_j} (w^{(1)}_k x_k) = x_k
+	$$
+
+with the gradient being
+
+	$$
+	\nabla \mathbf{z^\intercal_k} =  \begin{bmatrix}
+	x_1 & x_2 & x_3
+	\end{bmatrix}
+	$$
+
+and for k = 1, ..., 9
 
 
+	$$
+	\nabla \mathbf{z} = 
+	\begin{bmatrix}
+	\mathbf{z^\intercal_1} \\
+	\cdots \\
+	\mathbf{z^\intercal_9} \\
+	\end{bmatrix}
+	=  \begin{bmatrix}
+	x_1 & x_2 & x_3 \\
+	 & \cdots & \\
+	x_1 & x_2 & x_3 \\
+	\end{bmatrix}
+	$$
 
 
+Finally, the gradient of $E$ becomes
 
+	$$
+	\nabla E \ = \frac{dE}{do_i} \times \nabla o_i \times \nabla \mathbf{h} \nabla \mathbf{z}^\intercal = \frac{2}{N}  \sum^N_{i}  \left( (y_i - o_i) \times 
+	\begin{bmatrix}
+	w^{(2)}_1 \\
+	\cdots \\
+	w^{(2)}_9
+	\end{bmatrix} \times 
+	f(\mathbf{z}) (1 - f(\mathbf{z})) \right)
+	\begin{bmatrix}
+	x_1 & x_2 & x_3 \\
+	 & \cdots & \\
+	x_1 & x_2 & x_3 \\
+	\end{bmatrix}	
+	$$
 
 
 \end{document}
