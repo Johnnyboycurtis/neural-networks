@@ -32,14 +32,10 @@ class NeuralNetwork:
         self.learning_rate = learning_rate
         self.hidden_units = hidden_units
         np.random.seed(123)
-        self.weights1 = np.random.normal(loc=0, scale=1, size=(X.shape[1], hidden_units)).round(3) # (input units, hidden units)
-        self.weights2 = np.random.normal(loc=0, scale=1, size=(hidden_units, 1)).round(3) # for now there will only be one output unit
-
-        print("Weights 1")
-        print(self.weights1)
-        
-        print("Weights 2")
-        print(self.weights2)
+        self.weights1 = np.random.normal(loc=0, scale=1, 
+                            size=(X.shape[1], hidden_units)) # (input units, hidden units)
+        self.weights2 = np.random.normal(loc=0, scale=1, 
+                            size=(hidden_units, 1)) # for now there will only be one output unit
 
 
     def forward(self, X = None, verbose=False):
@@ -63,8 +59,8 @@ class NeuralNetwork:
 
         # update hidden layer weights
         hidden_error = np.dot(self.weights2, output_error) # neccessary for hidden layer updates; 9 x 1
-        update1 = hidden_error * hidden_output1 * (1 - hidden_output1) # logistic output from first hidden layer
-        update1 = update1*x[:, None] # multiply the input units as is part of the logistic derivative
+        hidden_error = hidden_error * hidden_output1 * (1 - hidden_output1) # logistic output from first hidden layer
+        update1 = hidden_error*x[:, None] # multiply the input units as is part of the logistic derivative
         
         # update output layer weights; linear not logistic
         update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
@@ -106,7 +102,7 @@ def example_data(rows = 20, columns = 3):
     ## scale the values ##
     X = X / 1000
     y = (y - 68) / 500
-    return (X, y.round(3))
+    return (X, y)
 
 
 def forward_run_example():
@@ -153,11 +149,6 @@ def run_example():
         plt.scatter(X[:, i], y=y, marker='o')
         plt.scatter(X[:, i], y=yhat, marker='x')
         plt.show()
-
-    #print("Weights 1")
-    #print(model.weights1.round(3))
-    #print("Weights 2")
-    #print(model.weights2.round(3))
 
     return model
 
