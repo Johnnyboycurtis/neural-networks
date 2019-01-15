@@ -1,5 +1,5 @@
 
-\documentclass[11pt]{article}% use option titlepage to get the title on a page of its own.
+\documentclass[12pt]{article}% use option titlepage to get the title on a page of its own.
 \usepackage{blindtext}
 \title{Notes on a 2-Layer Feed Forward Neural Network for Regression Tasks}
 \date{2019\\ January}
@@ -9,7 +9,8 @@
 \usepackage{mathtools}
 \usepackage{amssymb}
 \usepackage{lipsum}
-
+\usepackage{listings}
+\usepackage{color}
 
 
 \begin{document}
@@ -19,8 +20,34 @@
 	The following notes relate to a simple feed forward neural network trained for regression tasks. The neural network has an input layer (the inputs) and two hidden layers. The first hidden layer recieves the input data and transforms it into a nonlinear space. The data is feed forward into the second hidden layer for the output. The neural network is trained using vanilla stochastic gradient descent (SGD).
 	
 	The neural network is implemented in a Python script (nnet.py).
-	
-	
+
+
+\lstset{language=Python}
+\lstset{label={lst:code_direct}}
+\lstset{keywordstyle=\color{blue}}
+\definecolor{mygreen}{rgb}{0,0.4,0}
+\lstset{commentstyle=\color{mygreen}}
+\lstset{basicstyle=\small\sffamily}
+\begin{lstlisting}
+    def example_data(rows = 20, columns = 3):
+        #np.random.seed(123)
+        X = np.random.normal(size=(rows, columns))
+        X[:, 0] = np.linspace(start=-10, stop=10, num=rows)**4
+        X[:, 1] = np.linspace(start=-10, stop=10, num=rows)
+        X[:, 2] = np.linspace(start=-10, stop=10, num=rows)**3
+        y = 1.5 * X[:, 0] + X[:, 1] + 2 * X[:, 2]
+        y = y[:, None]
+        ## scale the values ##
+        X = X / 1000
+        y = (y - 68) / 500
+        return (X, y)
+\end{lstlisting}
+
+
+
+
+
+
 \section{Architecture}
 
 \includegraphics{nnet.pdf}
@@ -317,6 +344,204 @@ Finally, the gradient of $E$ becomes
 	x_1 & x_2 & x_3 \\
 	\end{bmatrix}	
 	$$
+
+
+\section{Python Implementation}
+
+
+The neural network described above is implemented in the `NeuralNetwork` class. The neural network class requires the $X$ and $y$ data inputs, the number of hidden units desired (default is 9), and the desired learning rate (default is 0.1). After the object has been initialized, it will have three methods
+
+\begin{enumerate}
+\item \_\_init\_\_
+\item forward
+\item backpropogation
+\item train
+\end{enumerate}
+
+	At initialization, the object generates two weights matrices for the first and second (output) hidden layers.
+
+
+\begin{lstlisting}
+
+class NeuralNetwork:
+
+    def __init__(self, X, y, hidden_units = 9, learning_rate = 0.1):
+        """
+        Two hidden layer neural network for regression
+            Hidden Layer 1: Logistic Activation
+            Hidden Layer 2: Linear Activation (for regression)
+        """
+        self.X = X
+        self.y = y
+        self.learning_rate = learning_rate
+        self.hidden_units = hidden_units
+        np.random.seed(123)
+        self.weights1 = np.random.normal(loc=0, scale=1, 
+                            size=(X.shape[1], hidden_units)) # (input units, hidden units)
+        self.weights2 = np.random.normal(loc=0, scale=1, 
+                            size=(hidden_units, 1)) # for now there will only be one output unit
+
+
+    def forward(self, X = None, verbose=False):
+		...
+
+
+    def backpropogation(self, hidden_output1, hidden_output2, x, target):
+		...
+
+
+    def train(self, n_epochs = 15):
+    	...
+    	
+
+\end{lstlisting}
+
+
+
+\subsection{Forward Pass}
+
+The forward pass takes incoming data $\mathbf{x}^\intercal_i$ and applies a linear operation on it with its respective layer weights. Afterwards, the hidden input is passed through the logistic activation function.
+
+The hidden output is then forwarded to the second hidden layer, the output layer, and passed through the linear function again. The output layer has an identity activation function, so there's no additional work needed there.
+
+
+\begin{lstlisting}
+...
+	
+    def forward(self, X = None, verbose=False):
+        if isinstance(X, np.ndarray):
+            hidden_output1 = linear(X, self.weights1)
+            hidden_output1 = sigmoid(hidden_output1) # apply the nonlinear transformation
+
+            hidden_output2 = linear(hidden_output1, self.weights2)
+
+            if verbose:
+                print("hidden output: ", hidden_output1.round(3))
+                print("output: ", hidden_output2.round(3))
+
+            return hidden_output2, hidden_output1
+        else:
+            raise ValueError("need a vector in the forward function")
+   
+   ...         
+\end{lstlisting}
+
+
+The linear function is simply dot product.
+
+\begin{lstlisting}
+def linear(X_input, weights):
+    """
+    out = Xw
+    X should be (rows, columns) and w should match (columns, hidden units)
+    """
+    a = np.dot(X_input, weights)
+    return a
+\end{lstlisting}
+
+
+
+
+\subsection{Backpropogation}
+
+During the training pass, we need to feed back the errors to update the weights. In the backpropogation method, the neural network takes the hidden output, neural network output, $x$ input and the output target values.
+
+First, calculate the output error, the difference between the target and the neural network output. With that error, you multiply it with the weights of the second hidden layer. 
+
+Finally, to get the update for the first layer, we multiply it by the gradient of $\mathbf{z}^\intercal$; this is just the input. Instead of creating a matrix, we can just calculate the product between hidden error and $\mathbf{x}^\intercal$. The vectors multiplied together will create a matrix. 
+
+\begin{lstlisting}
+...
+	
+    def backpropogation(self, hidden_output1, hidden_output2, x, target):
+        output_error = (target - hidden_output2) #  -(target - y); 20 x 1
+
+        # update hidden layer weights
+        hidden_error = np.dot(self.weights2, output_error) # neccessary for hidden layer updates; 9 x 1
+        hidden_error = hidden_error * hidden_output1 * (1 - hidden_output1) # logistic output from first hidden layer
+        update1 = hidden_error*x[:, None] # multiply the input units as is part of the logistic derivative
+        
+        # update output layer weights; linear not logistic
+        update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
+        return update2[:, None], update1
+   
+   ...         
+\end{lstlisting}
+
+
+The output returns a tuple containing the updates for output and first hidden layers' weights. It should be noted that adding `[:, None]` to a 1-D array turns it to a 2-D array (matrix).
+
+
+In the notes above, we used a matrix 
+
+	$$
+	X_i = \begin{bmatrix}
+	\mathbf{x}^\intercal_i \\
+	\cdots \\
+	\mathbf{x}^\intercal_i \\
+	\end{bmatrix}
+	$$
+
+however, we can get the same result (and save some work) by using only 1 array, $\mathbf{x}^\intercal_i$.
+
+
+
+\subsection{Gradient Descent}
+
+	Gradient descent during the training step occurs with the gradient\_descent method.
+	
+	As with gradient descent, once the update is computed we update the weight with
+	
+	$$
+	w_{t+1} = w_t - \alpha \nabla F
+	$$	
+	
+where $\nabla F$ is the gradient
+	
+\begin{lstlisting}
+...
+	
+    def gradient_descent(self, delta_weights1, delta_weights2):
+        self.weights1 += self.learning_rate * delta_weights1 # hidden layer weights
+        self.weights2 += self.learning_rate * delta_weights2 # output layer weights
+        return None
+   
+   ...         
+\end{lstlisting}
+
+
+
+\subsection{Training}
+
+The training function is fairly straight forward. You train each epoch by looping through each observation in the data set. For each observation, the function passes it through the `forward` method to calculate the hidden outputs from both hidden layers. Then the outputs and data observations are passed through the backpropogation to obtain an update for the weights. However, the weights don't get updated immediately. 
+
+Updating the weights will only occur after we pass all observations through the neural network. Two zero vectors are created, `delta\_weights1` and `delta\_weights2`. These will contain all updates.
+
+After all updates are calculated, they are then aggregated to the current weights to update weights for the next epoch.
+
+\begin{lstlisting}
+...
+	
+    def train(self, n_epochs = 15):
+        n_records = self.X.shape[0]
+        for _ in range(n_epochs):
+            delta_weights1 = np.zeros_like(self.weights1)
+            delta_weights2 = np.zeros_like(self.weights2)
+            for x, y in zip(self.X, self.y):
+                hidden_output2, hidden_output1 = self.forward(X=x,
+                    verbose=False)
+                update2, update1 = self.backpropogation(hidden_output1, hidden_output2, 
+                    x=x, target=y)
+                delta_weights1 += update1 / n_records
+                delta_weights2 += update2 / n_records
+            self.gradient_descent(delta_weights1, delta_weights2)
+            yhat, _ = self.forward(X=self.X)
+            mse_stat = MSE(y = self.y, yhat = yhat)
+            #print("MSE: ", mse_stat)
+        return yhat
+   
+   ...         
+\end{lstlisting}
 
 
 \end{document}
