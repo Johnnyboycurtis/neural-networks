@@ -132,11 +132,10 @@ def example_data(rows = 20, columns = 3):
 
 def forward_run_example():
     X, y = example_data()
-    model = NeuralNetwork(X, y)
+    model = NeuralNetwork(input_size=3)
     print("Forward Run")
     for x, _ in zip(X,y): 
-        hidden_output2, hidden_output1 = model.forward(X=x) # returns (final_output, hidden_output1)
-        #print(x,target)
-    return model, hidden_output2, hidden_output1, X, y
+        out = model.forward(X=x) # returns (final_output, hidden_output1)
+    return model, out
 
 forward_run_example()
