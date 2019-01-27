@@ -23,7 +23,7 @@ def ReLu(hidden_input):
     return np.maximum(hidden_input, 0)
 
 def dReLu(hidden_input):
-    """
+    """ 
     Derivative of ReLu
     """
     ind = hidden_input <= 0
@@ -78,8 +78,7 @@ class NeuralNetwork:
         # update hidden layer weights
         hidden_error = np.dot(self.weights2, output_error) # neccessary for hidden layer updates; 9 x 1
         hidden_input = linear(x, self.weights1)
-        update1 = hidden_error * dReLu(hidden_input) # logistic output from first hidden layer
-        update1 = update1*x[:, None] # multiply the input units as is part of the logistic derivative
+        update1 = hidden_error * x[:, None] # multiply the input units as is part of the logistic derivative
         
         # update output layer weights; linear not logistic
         update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
