@@ -77,8 +77,8 @@ class NeuralNetwork:
 
         # update hidden layer weights
         hidden_error = np.dot(self.weights2, output_error) # neccessary for hidden layer updates; 9 x 1
-        hidden_input = linear(x, self.weights1)
         update1 = hidden_error * x[:, None] # multiply the input units as is part of the logistic derivative
+        print(update1.shape)
         
         # update output layer weights; linear not logistic
         update2 = output_error * hidden_output1 # use hidden layer outputs to update output layer weights
@@ -157,7 +157,7 @@ def gradient_descent_example():
 def run_example():
     X, y = example_data()
     model = NeuralNetwork(X, y, hidden_units=100, learning_rate=0.001)
-    yhat = model.train(n_epochs=100)
+    yhat = model.train(n_epochs=1)
     yhat = yhat*500 + 68
     y = y*500 + 68
     mse_stat = MSE(y = y, yhat = yhat)

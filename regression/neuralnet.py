@@ -69,16 +69,18 @@ class NeuralNetwork:
         error = y - h3 # h3 is output
 
         # gradient wrt h3 (output) weights
-        grad3 = error * h2 / N
+        grad3 = error * h2[:, None] / N
 
         # gradient wrt h2 weights
-        grad2 = error * self.h3_weights * h1 * dReLu(h1) / N
+        grad2 = error * self.h3_weights * h1[:, None] / N
         # (9x9) = float * W_(9x1) * H_(9x1) * H'_(9x1)
 
         # gradient wrt h1 weights
-        grad1 = error * self.h3_weights * self.h2_weights * dReLu(h1) * X * dReLu(X) / N
-        # () = float * W_(9x1) * W_(9x9) * H_(9x1)
-
+        #grad1 = error * self.h3_weights * self.h2_weights * X[:, None] / N # original
+        # () = float * W_(9x1) * W_(9x9) * X_(3x1) ## needs to be (3 x 9)
+        grad1 = error * np.dot(self.h2_weights, self.h3_weights).T * X[:, None] / N
+        #print(grad1.shape, self.h1_weights.shape)
+        
         return grad1, grad2, grad3
 
     
@@ -105,7 +107,7 @@ class NeuralNetwork:
                 update2 += grad2
                 update3 += grad3
             self.gradient_descent(update1, update2, update3)
-            yhat, _ = self.forward(X=X)
+            h1, h2, yhat = self.forward(X=X)
             mse_stat = MSE(y = y, yhat = yhat)
             self.history.append(mse_stat)
             print("Epoch {}: | MSE: {}".format(y, mse_stat))
@@ -136,6 +138,33 @@ def forward_run_example():
     print("Forward Run")
     for x, _ in zip(X,y): 
         out = model.forward(X=x) # returns (final_output, hidden_output1)
-    return model, out
+    return model, out, X, y
 
 forward_run_example()
+
+
+def backprop_run_example():
+    model, (h1, h2, h3), X, y = forward_run_example()
+    N = X.shape[0]
+    print("Backward Run")
+    update1 = np.zeros_like(model.h1_weights)
+    update2 = np.zeros_like(model.h2_weights)
+    update3 = np.zeros_like(model.h3_weights)
+    for (x, target) in zip(X, y):
+        grad1, grad2, grad3 = model.backprop( h1, h2, h3, x, target, N)
+        update1 += grad1
+        update2 += grad2
+        update3 += grad3
+    return model, (update1, update2, update3)
+
+
+backprop_run_example()
+
+
+def gradient_descent_example():
+    print("Gradient Descent")
+    model, (update1, update2, update3) = backprop_run_example()
+    model.gradient_descent(update1, update2, update3)
+
+
+gradient_descent_example()
