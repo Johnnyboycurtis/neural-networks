@@ -96,7 +96,7 @@ class NeuralNetwork:
     def train(self, epochs, X, y):
         N = X.shape[0]
         self.history = list()
-        for _ in range(epochs):
+        for i in range(epochs):
             update1 = np.zeros_like(self.h1_weights)
             update2 = np.zeros_like(self.h2_weights)
             update3 = np.zeros_like(self.h3_weights)
@@ -110,7 +110,7 @@ class NeuralNetwork:
             h1, h2, yhat = self.forward(X=X)
             mse_stat = MSE(y = y, yhat = yhat)
             self.history.append(mse_stat)
-            print("Epoch {}: | MSE: {}".format(y, mse_stat))
+            print("Epoch {}: | MSE: {}".format(i, mse_stat))
 
         return self.history
 
@@ -168,3 +168,30 @@ def gradient_descent_example():
 
 
 gradient_descent_example()
+
+
+
+
+def run_example():
+    X, y = example_data()
+    model = NeuralNetwork(input_size=3, h1_units=50, h2_units=50)
+    model.train(epochs=100, X = X, y = y)
+    _ , _ , yhat = model.forward(X = X)
+    yhat = yhat*500 + 68
+    y = y*500 + 68
+    mse_stat = MSE(y = y, yhat = yhat)
+    #print("Final MSE (not scaled): ", mse_stat)
+    for i in range(3):
+        plt.title("X[:, {}] and y".format(i))
+        plt.scatter(X[:, i], y=y, marker='o')
+        plt.scatter(X[:, i], y=yhat, marker='x')
+        plt.show()
+
+    #print("Weights 1")
+    #print(model.weights1.round(3))
+    #print("Weights 2")
+    #print(model.weights2.round(3))
+
+    return model
+
+run_example()
