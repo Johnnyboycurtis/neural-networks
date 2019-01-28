@@ -60,7 +60,7 @@ class NeuralNetwork:
 
         # hidden2 to hidden3
         z = linear(h2, self.h3_weights)
-        h3 = ReLu(z)
+        h3 = z
 
         return h1, h2, h3
 
@@ -117,7 +117,7 @@ class NeuralNetwork:
 
 
 
-
+"""
 def example_data(rows = 20, columns = 3):
     #np.random.seed(123)
     X = np.random.normal(size=(rows, columns))
@@ -130,11 +130,23 @@ def example_data(rows = 20, columns = 3):
     X = X / 1000
     y = (y - 68) / 500
     return (X, y.round(3))
+"""
+
+def example_data(rows = 100):
+    x = np.linspace(start=0, stop=30, num = 100).reshape((rows, 1))
+    #y = 2*np.sin(x) + x
+    y = np.sqrt(x)
+    # scale the data
+    x = (x - 15)/10
+    y = y /10
+    return x,y
+
+
 
 
 def forward_run_example():
     X, y = example_data()
-    model = NeuralNetwork(input_size=3)
+    model = NeuralNetwork(input_size=1)
     print("Forward Run")
     for x, _ in zip(X,y): 
         out = model.forward(X=x) # returns (final_output, hidden_output1)
@@ -174,24 +186,12 @@ gradient_descent_example()
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(input_size=3, h1_units=50, h2_units=50)
-    model.train(epochs=100, X = X, y = y)
+    model = NeuralNetwork(input_size=1, h1_units=10, h2_units=5, learning_rate=0.001)
+    model.train(epochs=1000, X = X, y = y)
     _ , _ , yhat = model.forward(X = X)
-    yhat = yhat*500 + 68
-    y = y*500 + 68
-    mse_stat = MSE(y = y, yhat = yhat)
-    #print("Final MSE (not scaled): ", mse_stat)
-    for i in range(3):
-        plt.title("X[:, {}] and y".format(i))
-        plt.scatter(X[:, i], y=y, marker='o')
-        plt.scatter(X[:, i], y=yhat, marker='x')
-        plt.show()
-
-    #print("Weights 1")
-    #print(model.weights1.round(3))
-    #print("Weights 2")
-    #print(model.weights2.round(3))
-
+    plt.plot(y)
+    plt.plot(yhat)
+    plt.show()
     return model
 
 run_example()
