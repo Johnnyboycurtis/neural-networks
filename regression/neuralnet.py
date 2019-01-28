@@ -38,9 +38,9 @@ class NeuralNetwork:
     def __init__(self, input_size, learning_rate=0.0001, h1_units = 9, h2_units = 9, h3_units = 1, seed=None):
 
         self.learning_rate = 0.0001
-        self.h1_units = h1_units
-        self.h2_units = h2_units
-        self.h3_units = h3_units
+        self.h1_units = h1_units + 1
+        self.h2_units = h2_units + 1
+        self.h3_units = h3_units + 1
         self.input_size = input_size
 
         np.random.seed(seed)
@@ -49,6 +49,8 @@ class NeuralNetwork:
         self.h3_weights = np.random.normal(size = (h2_units, h3_units))
 
     def forward(self, X):
+
+        ## need to add an intercept
 
         # input to first layer
         z = linear(X, self.h1_weights)
@@ -70,10 +72,11 @@ class NeuralNetwork:
 
         # gradient wrt h3 (output) weights
         grad3 = error * h2[:, None] / N
+        # (5x1) = float * (5x1)
 
         # gradient wrt h2 weights
-        grad2 = error * self.h3_weights * h1[:, None] / N
-        # (9x9) = float * W_(9x1) * H_(9x1) * H'_(9x1)
+        grad2 = error * (self.h3_weights * h1).T / N
+        # (10x5) = float * W_(5x1) * H_(10, )
 
         # gradient wrt h1 weights
         #grad1 = error * self.h3_weights * self.h2_weights * X[:, None] / N # original
@@ -186,8 +189,8 @@ gradient_descent_example()
 
 def run_example():
     X, y = example_data()
-    model = NeuralNetwork(input_size=1, h1_units=10, h2_units=5, learning_rate=0.001)
-    model.train(epochs=1000, X = X, y = y)
+    model = NeuralNetwork(input_size=1, h1_units=50, h2_units=5, learning_rate=0.001)
+    model.train(epochs=100, X = X, y = y)
     _ , _ , yhat = model.forward(X = X)
     plt.plot(y)
     plt.plot(yhat)

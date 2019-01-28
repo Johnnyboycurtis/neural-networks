@@ -17,13 +17,14 @@ def example_data(rows = 100):
 
 X, y = example_data()
 
-model = MLPRegressor(hidden_layer_sizes=(50,50), activation='relu', shuffle=False,
+model = MLPRegressor(hidden_layer_sizes=(50,5), activation='relu', shuffle=False, batch_size= len(y), 
             solver='sgd', alpha=0, learning_rate='constant', learning_rate_init=0.0001, 
-            max_iter=10000, validation_fraction=0)
+            max_iter=100000, validation_fraction=0)
 
 
 
 model.fit(X = X, y = y)
+print(model.loss_)
 
 yhat = model.predict(X) 
 plt.plot(y)
